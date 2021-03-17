@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #define MAX 	65504
 #define MIN 	-65504
+#define D_MAX	0.000060
+#define D_MIN	-0.000060
 #define POS_INF 31744
 #define NEG_INF 64512
 #define TMAX	0x7fffffff
@@ -68,10 +70,26 @@ sfp float2sfp(float input){
 	// if input is special value
 	if (input > MAX)
 		return POS_INF;
-	if (input < MIN)
+	if (input < MIN || !(MIN <= input && input <= MAX))
 		return NEG_INF;
 
 	sfp res = 0; // 0 00000 0000000000
+	// set sign bit
+	if (input < 0) {
+		res |= 1 << 15;
+		input *= -1;
+	}
+	// set Mantissa
+	for (int i = 22; i >= 13; i--) {
+		res |= (((input >> i) & 1) << (i - 13));
+	}
+	// set Exponent if input is Normalized value
+	if (!(D_MIN <= input && input <= D_MAX)) {
+		int E = (input >> 23) - 127;
+		int exp = E + BIAS;
+		res |= exp << 10;
+	}
+	return res;
 }
 
 float sfp2float(sfp input){
