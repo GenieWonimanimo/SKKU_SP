@@ -56,6 +56,7 @@ int sfp2int(sfp input){
 		M += ((input >> i) & 1) * tmp;
 		tmp /= 2;
 	}
+	M += 1;
 	// get Exponent
 	int E = (input >> 10) - BIAS; // E = exp - BIAS
 	for (int i = 0; i < E; i++)
