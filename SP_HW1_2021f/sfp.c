@@ -85,7 +85,7 @@ sfp float2sfp(float input){
 		return NEG_INF;
 
 	sfp res = 0; // 0 00000 0000000000
-	int* pF = (int*)&input;
+	int* pf = (int*)&input;
 	// set sign bit
 	if (input < 0) {
 		res |= 1 << 15;
