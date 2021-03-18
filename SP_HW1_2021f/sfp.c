@@ -27,7 +27,9 @@ sfp int2sfp(int input){
 		return POS_INF;
 	if (input < MIN || !(MIN <= input && input <= MAX))
 		return NEG_INF;
-	// input is not denormalized value because input is int
+	// if input is denormalized value
+	if (input == 0)
+		return 0;
 	sfp res = 0; // 0 00000 0000000000, initial state
 	// set sign bit
 	if (input < 0) {
