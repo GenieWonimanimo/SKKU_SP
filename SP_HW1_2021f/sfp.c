@@ -10,6 +10,17 @@
 #define TMIN		0x80000000
 #define BIAS		15
 
+double Pow(double a, int b) {
+    if (b == 1)
+        return a;
+    if (b == -1)
+        return 1 / a;
+    double res = Pow(a, b / 2);
+    if (b % 2 == 0)
+        return res * res;
+    return res * res * (b > 0 ? a : (1 / a));
+}
+
 sfp int2sfp(int input){
 	// if input is special value
 	if (input > MAX)
@@ -61,9 +72,7 @@ int sfp2int(sfp input){
 	M += 1;
 	// get Exponent
 	int E = (input >> 10) - BIAS; // E = exp - BIAS
-	for (int i = 0; i < E; i++)
-		M *= 2;
-	return s * M; // s * M * pow(2, E)
+	return s * M * Pow(2, E);
 }
 
 sfp float2sfp(float input){
@@ -74,7 +83,7 @@ sfp float2sfp(float input){
 		return NEG_INF;
 
 	sfp res = 0; // 0 00000 0000000000
-	int* pF = (int*)&input; // for shift operation
+	int* pF = (int*)&input;
 	// set sign bit
 	if (input < 0) {
 		res |= 1 << 15;
@@ -139,15 +148,7 @@ float sfp2float(sfp input){
 		E = 1 - BIAS;
 	else // else, E = exp - BIAS
 		E = (input >> 10) - BIAS;
-	if (E < 0) {
-		for (int i = 0; i < E * -1; i++)
-			M *= 0.5;
-	}
-	else {
-		for (int i = 0; i < E; i++)
-			M *= 2;
-	}
-	return s * M; // s * M * pow(2, E)
+	return s * M * Pow(2, E);
 }
 
 sfp sfp_add(sfp a, sfp b){
