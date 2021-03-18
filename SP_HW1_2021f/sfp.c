@@ -1,14 +1,14 @@
 #include "sfp.h"
 #include <stdlib.h>
-#define MAX 	65504
-#define MIN 	-65504
-#define D_MAX	0.000060
-#define D_MIN	-0.000060
-#define POS_INF 31744
-#define NEG_INF 64512
-#define TMAX	0x7fffffff
-#define TMIN	0x80000000
-#define BIAS	15
+#define MAX 		65504
+#define MIN 		-65504
+#define D_MAX		0.000060
+#define D_MIN		-0.000060
+#define POS_INF 	31744
+#define NEG_INF 	64512
+#define TMAX		0x7fffffff
+#define TMIN		0x80000000
+#define BIAS		15
 
 sfp int2sfp(int input){
 	// if input is special value
@@ -74,18 +74,40 @@ sfp float2sfp(float input){
 		return NEG_INF;
 
 	sfp res = 0; // 0 00000 0000000000
+	int* pF = (int*)&input; // for shift operation
 	// set sign bit
 	if (input < 0) {
 		res |= 1 << 15;
-		input *= -1;
+		*pF *= -1;
 	}
 	// set Mantissa
-	for (int i = 22; i >= 13; i--) {
-		res |= (((input >> i) & 1) << (i - 13));
+	int M = 0;
+	int integerPart = input;
+	float fractionalPart = input - integerPart;
+	int cnt = 0;
+	if (integerPart == 0)
+		cnt = 1;
+	else {
+		while (integerPart > 0) {
+			M <<= 1;
+			M |= integerPart % 2;
+			integerPart /= 2;
+			cnt++;
+		}
 	}
+	for (int i = 0; i < 11 - cnt; i++) {
+		M <<= 1;
+		fractionalPart *= 2;
+		if (fractionalPart >= 1) {
+			M |= 1;
+			fractionalPart -= 1;
+		}
+	}
+	M = M & ~(1 << 10);
+	res |= M;
 	// set Exponent if input is Normalized value
 	if (!(D_MIN <= input && input <= D_MAX)) {
-		int E = (input >> 23) - 127;
+		int E = (*pF >> 23) - 127;
 		int exp = E + BIAS;
 		res |= exp << 10;
 	}
@@ -93,14 +115,48 @@ sfp float2sfp(float input){
 }
 
 float sfp2float(sfp input){
+	// if sfp is special value
+	if (input == POS_INF)
+		return TMAX;
+	if (input == NEG_INF)
+		return TMIN;
+	// get sign, if sign bit is 1, res is negative int
+	int s = 1;
+	if ((input >> 15) & 1 == 1) {
+		s = -1;
+		input = input & ~(1 << 15);
+	}
+	// get Mantissa
+	double M = 0;
+	double tmp = 0.5;
+	for (int i = 9; i >= 0; i--) {
+		M += ((input >> i) & 1) * tmp;
+		tmp /= 2;
+	}
+	M += (input <= 1023) ? 0 : 1; // if input is denormalized value, 1023 == 0 00000 1111111111
+	// get Exponent
+	int E;
+	if (input <= 1023) // if input is denormalized value, E = 1 - BIAS
+		E = 1 - BIAS;
+	else // else, E = exp - BIAS
+		E = (input >> 10) - BIAS;
+	if (E < 0) {
+		for (int i = 0; i < E * -1; i++)
+			M *= 0.5;
+	}
+	else {
+		for (int i = 0; i < E; i++)
+			M *= 2;
+	}
+	return s * M; // s * M * pow(2, E)
 }
 
 sfp sfp_add(sfp a, sfp b){
-	
+	return 0;
 }
 
 sfp sfp_mul(sfp a, sfp b){
-	
+	return 0;
 }
 
 char* sfp2bits(sfp result){
