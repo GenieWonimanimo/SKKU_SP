@@ -93,7 +93,7 @@ sfp float2sfp(float input){
 	}
 	// set Exponent
 	int E = 1 - BIAS; // set denormalized case as default
-	if (!input <= D_MAX) { // if input is normalized value
+	if (input > D_MAX) { // if input is normalized value
 		E = (*pf >> 23) - 127;
 		int exp = E + BIAS;
 		res |= exp << 10;
