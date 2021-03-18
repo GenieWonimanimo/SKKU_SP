@@ -91,36 +91,26 @@ sfp float2sfp(float input){
 		res |= 1 << 15;
 		input *= -1;
 	}
-	// set Mantissa
-	int M = 0;
-	int integerPart = input;
-	float fractionalPart = input - integerPart;
-	int cnt = 0;
-	if (integerPart == 0)
-		cnt = 1;
-	else {
-		while (integerPart > 0) {
-			M |= ((integerPart % 2) << cnt);
-			integerPart /= 2;
-			cnt++;
-		}
+	// set Exponent
+	int E = 1 - BIAS; // set denormalized case as default
+	if (!input <= D_MAX) { // if input is normalized value
+		E = (*pf >> 23) - 127;
+		int exp = E + BIAS;
+		res |= exp << 10;
 	}
-	for (int i = 0; i < 11 - cnt; i++) {
+	// set Mantissa
+	int M = 1;
+	double fracVal = input / Pow(2, E) - (input > D_MAX ? 1 : 0);
+	for (int i = 0; i < 10; i++) {
 		M <<= 1;
-		fractionalPart *= 2;
-		if (fractionalPart >= 1) {
+		fracVal *= 2;
+		if (fracVal >= 1) {
 			M |= 1;
-			fractionalPart -= 1;
+			fracVal -= 1;
 		}
 	}
 	M = M & ~(1 << 10);
 	res |= M;
-	// set Exponent if input is Normalized value
-	if (!(D_MIN <= input && input <= D_MAX)) {
-		int E = (*pF >> 23) - 127;
-		int exp = E + BIAS;
-		res |= exp << 10;
-	}
 	return res;
 }
 
