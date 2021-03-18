@@ -78,7 +78,7 @@ sfp float2sfp(float input){
 	// set sign bit
 	if (input < 0) {
 		res |= 1 << 15;
-		*pF *= -1;
+		input *= -1;
 	}
 	// set Mantissa
 	int M = 0;
@@ -89,8 +89,7 @@ sfp float2sfp(float input){
 		cnt = 1;
 	else {
 		while (integerPart > 0) {
-			M <<= 1;
-			M |= integerPart % 2;
+			M |= ((integerPart % 2) << cnt);
 			integerPart /= 2;
 			cnt++;
 		}
