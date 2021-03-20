@@ -217,7 +217,7 @@ sfp sfp_add(sfp a, sfp b){
 		}
 	}
 	resM = resM & ~(1 << 10);
-	int resExp = (resE == 1 - BIAS) ? 0 : resE + BIAS;
+	int resExp = resE + BIAS;
 	res |= resS << 15;
 	res |= resM;
 	res |= resExp << 10;
@@ -276,7 +276,7 @@ sfp sfp_mul(sfp a, sfp b){
 		return (resS == 0 ? POS_INF : NEG_INF);
 	// get the result
 	resM = resM & ~(1 << 10);
-	int resExp = (resE == 1 - BIAS) ? 0 : resE + BIAS;
+	int resExp = resE + BIAS;
 	res |= resS << 15;
 	res |= resM;
 	res |= resExp << 10;
