@@ -264,11 +264,10 @@ sfp sfp_mul(sfp a, sfp b){
 	int resM = m1 * m2;
 	int resE = E1 + E2;
 	// normalize
-	while (resM >= 2048) { // 2048 == 1000 0000 0000
+	while (resM >= 4096) { // 4096 == 1 0000 0000 0000
 		resM >>= 1;
-		resE++;
 	}
-	if (resE < 1 - BIAS) {
+	if (((resM >> 11) & 1) == 1) {
 		resM >>= 1;
 		resE++;
 	}
