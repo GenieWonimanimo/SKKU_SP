@@ -150,23 +150,70 @@ sfp sfp_add(sfp a, sfp b){
 	// if a or b is special value
 	if (a == NAN || b == NAN)
 		return NAN;
-	if (a == POS_INF) {
-		if (b == NEG_INF)
-			return NAN;
-		return POS_INF;
-	}
-	if (b == POS_INF) {
-		if (a == NEG_INF)
+	if (a == POS_INF || b == POS_INF) {
+		if (a == NEG_INF || b == NEG_INF)
 			return NAN;
 		return POS_INF;
 	}
 	if (a == NEG_INF || b == NEG_INF)
 		return NEG_INF;
-	return 0;
-
+	// get sign, exponent, mantissa of a, b
+	int s1 = (a >> 15) & 1;
+	int s2 = (b >> 15) & 1;
+	int exp1 = (a & ~(1 << 15)) >> 10;
+	int exp2 = (b & ~(1 << 15)) >> 10;
+	int E1 = 1 - BIAS;
+	int E2 = 1 - BIAS;
+	int m1 = (a << 6) >> 6;
+	int m2 = (b << 6) >> 6;
+	if (exp1 != 0) {
+		E1 = exp1 - BIAS;
+		m1 |= (1 << 10);
+	}
+	if (exp2 != 0) {
+		E2 = exp2 - BIAS;
+		m2 |= (1 << 10);
+	}
+	// normalize
+	if (E1 < E2) {
+		m1 >>= (E2 - E1);
+		E1 = E2;
+	}
+	if (E2 < E1) {
+		m2 >>= (E1 - E2);
+		E2 = E1;
+	}
+	int res = 0;
+	// if a and b has same sign bit
+	if (s1 == s2) {
+		int resS = s1;
+		int resM = m1 + m2;
+		int resE = E1;
+		// normalize
+		if ((resM >> 11) & 1 == 1) {
+			resM >>= 1;
+			resE++;
+		}
+		resM = resM & ~(1 << 10);
+		int resExp = (resE == 1 - BIAS) ? 0 : resE + BIAS;
+		res |= resS << 15;
+		res |= resExp << 10;
+		res |= resM;
+	}
+	return res;
 }
 
 sfp sfp_mul(sfp a, sfp b){
+	if (a == NAN || b == NAN)
+		return NAN;
+	if (a == POS_INF || a == NEG_INF || b == POS_INF || b == NEG_INF) {
+		if (a == 0 || b == 0)
+			return NAN;
+		if ((a >> 15) & 1 == (b >> 15) & 1)
+			return POS_INF;
+		return NEG_INF;	
+	}
+
 	return 0;
 }
 
