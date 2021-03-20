@@ -225,6 +225,7 @@ sfp sfp_add(sfp a, sfp b){
 }
 
 sfp sfp_mul(sfp a, sfp b){
+	// if a or b is special value
 	if (a == NAN || b == NAN)
 		return NAN;
 	if (a == POS_INF || a == NEG_INF || b == POS_INF || b == NEG_INF) {
@@ -234,8 +235,53 @@ sfp sfp_mul(sfp a, sfp b){
 			return POS_INF;
 		return NEG_INF;	
 	}
-
-	return 0;
+	if (a == 0 || b == 0)
+		return 0;
+	// get sign, exponent, mantissa of a, b
+	int s1 = (a >> 15) & 1;
+	int s2 = (b >> 15) & 1;
+	int exp1 = (a & ~(1 << 15)) >> 10;
+	int exp2 = (b & ~(1 << 15)) >> 10;
+	int E1 = 1 - BIAS;
+	int E2 = 1 - BIAS;
+	sfp m1 = a;
+	m1 <<= 6;
+	m1 >>= 6;
+	sfp m2 = b;
+	m2 <<= 6;
+	m2 >>= 6;
+	if (exp1 != 0) {
+		E1 = exp1 - BIAS;
+		m1 |= (1 << 10);
+	}
+	if (exp2 != 0) {
+		E2 = exp2 - BIAS;
+		m2 |= (1 << 10);
+	}
+	// multiply Mantissa and Exponent
+	int res = 0;
+	int resS = (s1 == s2) ? 0 : 1;
+	int resM = m1 * m2;
+	int resE = E1 + E2;
+	// normalize
+	while (resM >= 2048) { // 2048 == 1000 0000 0000
+		resM >>= 1;
+		resE++;
+	}
+	if (resE < 1 - BIAS) {
+		resM >>= 1;
+		resE++;
+	}
+	// if result exceeds the range of sfp
+	if (resE > 15)
+		return (resS == 0 ? POS_INF : NEG_INF);
+	// get the result
+	resM = resM & ~(1 << 10);
+	int resExp = (resE == 1 - BIAS) ? 0 : resE + BIAS;
+	res |= resS << 15;
+	res |= resM;
+	res |= resExp << 10;
+	return res;
 }
 
 char* sfp2bits(sfp result){
