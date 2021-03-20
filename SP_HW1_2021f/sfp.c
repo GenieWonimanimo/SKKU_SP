@@ -164,8 +164,12 @@ sfp sfp_add(sfp a, sfp b){
 	int exp2 = (b & ~(1 << 15)) >> 10;
 	int E1 = 1 - BIAS;
 	int E2 = 1 - BIAS;
-	int m1 = (a << 6) >> 6;
-	int m2 = (b << 6) >> 6;
+	sfp m1 = a;
+	m1 <<= 6;
+	m1 >>= 6;
+	sfp m2 = b;
+	m2 <<= 6;
+	m2 >>= 6;
 	if (exp1 != 0) {
 		E1 = exp1 - BIAS;
 		m1 |= (1 << 10);
