@@ -183,27 +183,41 @@ sfp sfp_add(sfp a, sfp b){
 		m1 >>= (E2 - E1);
 		E1 = E2;
 	}
-	if (E2 < E1) {
+	else if (E2 < E1) {
 		m2 >>= (E1 - E2);
 		E2 = E1;
 	}
 	int res = 0;
+	int resS, resM, resE;
 	// if a and b has same sign bit
 	if (s1 == s2) {
-		int resS = s1;
-		int resM = m1 + m2;
-		int resE = E1;
+		resS = s1;
+		resM = m1 + m2;
+		resE = E1;
 		// normalize
 		if ((resM >> 11) & 1 == 1) {
 			resM >>= 1;
 			resE++;
 		}
-		resM = resM & ~(1 << 10);
-		int resExp = (resE == 1 - BIAS) ? 0 : resE + BIAS;
-		res |= resS << 15;
-		res |= resExp << 10;
-		res |= resM;
 	}
+	// if a and b has different sign bit
+	else {
+		resS = (m1 > m2) ? 0 : 1;
+		resM = (m1 > m2) ? m1 - m2 : m2 - m1;
+		resE = E1;
+		if (resM == 0)
+			return 0;
+		// normalize
+		while ((resM >> 10) & 1 != 1) {
+			resM <<= 1;
+			resE--;
+		}
+	}
+	resM = resM & ~(1 << 10);
+	int resExp = (resE == 1 - BIAS) ? 0 : resE + BIAS;
+	res |= resS << 15;
+	res |= resM;
+	res |= resExp << 10;
 	return res;
 }
 
