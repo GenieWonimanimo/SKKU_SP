@@ -125,7 +125,7 @@ float sfp2float(sfp input){
 		return TMIN;
 	// get sign, if sign bit is 1, res is negative int
 	int s = 1;
-	if ((input >> 15) & 1 == 1) {
+	if (((input >> 15) & 1) == 1) {
 		s = -1;
 		input = input & ~(1 << 15);
 	}
@@ -195,10 +195,13 @@ sfp sfp_add(sfp a, sfp b){
 		resM = m1 + m2;
 		resE = E1;
 		// normalize
-		if ((resM >> 11) & 1 == 1) {
+		if (((resM >> 11) & 1) == 1) {
 			resM >>= 1;
 			resE++;
 		}
+		// if result exceed bound
+		if (resE > 15)
+			return (resS == 0 ? POS_INF : NEG_INF);
 	}
 	// if a and b has different sign bit
 	else {
@@ -208,7 +211,7 @@ sfp sfp_add(sfp a, sfp b){
 		if (resM == 0)
 			return 0;
 		// normalize
-		while ((resM >> 10) & 1 != 1) {
+		while (((resM >> 10) & 1) != 1) {
 			resM <<= 1;
 			resE--;
 		}
@@ -227,7 +230,7 @@ sfp sfp_mul(sfp a, sfp b){
 	if (a == POS_INF || a == NEG_INF || b == POS_INF || b == NEG_INF) {
 		if (a == 0 || b == 0)
 			return NAN;
-		if ((a >> 15) & 1 == (b >> 15) & 1)
+		if (((a >> 15) & 1) == ((b >> 15) & 1))
 			return POS_INF;
 		return NEG_INF;	
 	}
