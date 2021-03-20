@@ -6,6 +6,7 @@
 #define D_MIN		-0.000060
 #define POS_INF 	31744
 #define NEG_INF 	64512
+#define NAN			0xffff
 #define TMAX		0x7fffffff
 #define TMIN		0x80000000
 #define BIAS		15
@@ -23,8 +24,10 @@ sfp int2sfp(int input){
 	// if input is special value
 	if (input > MAX)
 		return POS_INF;
-	if (input < MIN || !(MIN <= input && input <= MAX))
+	if (input < MIN)
 		return NEG_INF;
+	if (!(MIN <= input && input <= MAX))
+		return NAN;
 	// if input is denormalized value
 	if (input == 0)
 		return 0;
@@ -53,7 +56,7 @@ int sfp2int(sfp input){
 	// if sfp is special value
 	if (input == POS_INF)
 		return TMAX;
-	if (input == NEG_INF)
+	if (input == NEG_INF || input == NAN)
 		return TMIN;
 
 	// get sign, if sign bit is 1, res is negative int
@@ -79,8 +82,10 @@ sfp float2sfp(float input){
 	// if input is special value
 	if (input > MAX)
 		return POS_INF;
-	if (input < MIN || !(MIN <= input && input <= MAX))
+	if (input < MIN)
 		return NEG_INF;
+	if (!(MIN <= input && input <= MAX))
+		return NAN;
 
 	sfp res = 0; // 0 00000 0000000000
 	int* pf = (int*)&input;
@@ -116,7 +121,7 @@ float sfp2float(sfp input){
 	// if sfp is special value
 	if (input == POS_INF)
 		return TMAX;
-	if (input == NEG_INF)
+	if (input == NEG_INF || input == NAN)
 		return TMIN;
 	// get sign, if sign bit is 1, res is negative int
 	int s = 1;
@@ -142,7 +147,23 @@ float sfp2float(sfp input){
 }
 
 sfp sfp_add(sfp a, sfp b){
+	// if a or b is special value
+	if (a == NAN || b == NAN)
+		return NAN;
+	if (a == POS_INF) {
+		if (b == NEG_INF)
+			return NAN;
+		return POS_INF;
+	}
+	if (b == POS_INF) {
+		if (a == NEG_INF)
+			return NAN;
+		return POS_INF;
+	}
+	if (a == NEG_INF || b == NEG_INF)
+		return NEG_INF;
 	return 0;
+
 }
 
 sfp sfp_mul(sfp a, sfp b){
