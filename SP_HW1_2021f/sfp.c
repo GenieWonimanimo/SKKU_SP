@@ -258,18 +258,16 @@ sfp sfp_mul(sfp a, sfp b){
 		E2 = exp2 - BIAS;
 		m2 |= (1 << 10);
 	}
-	// multiply Mantissa and Exponent
+	// multiply Mantissa and add Exponent
 	int res = 0;
 	int resS = (s1 == s2) ? 0 : 1;
 	int resM = m1 * m2;
 	int resE = E1 + E2;
 	// normalize
-	while (resM >= 4096) { // 4096 == 1 0000 0000 0000
-		resM >>= 1;
-	}
-	if (((resM >> 11) & 1) == 1) {
-		resM >>= 1;
+	if (((resM >> 21) & 1) == 1)
 		resE++;
+	while (resM >= 2048) { // 2048 == 1000 0000 0000
+		resM >>= 1;
 	}
 	// if result exceeds the range of sfp
 	if (resE > 15)
