@@ -264,10 +264,10 @@ sfp sfp_mul(sfp a, sfp b){
 	int resM = m1 * m2;
 	int resE = E1 + E2;
 	// normalize
-	if (((resM >> 21) & 1) == 1)
-		resE++;
-	while (resM >= 2048) { // 2048 == 1000 0000 0000
+	resM >>= 10;
+	if (((resM >> 11) & 1) == 1) {
 		resM >>= 1;
+		resE++;
 	}
 	// if result exceeds the range of sfp
 	if (resE > 15)
