@@ -47,6 +47,7 @@ sfp int2sfp(int input){
 	// set Exponent
 	int exp = (cnt - 1) + BIAS; // cnt - 1 is E(= exp - BIAS)
 	res |= exp << 10;
+	// set Mantissa
 	if (cnt > 11) {
 		M >>= (cnt - 11);
 		cnt = 11;
