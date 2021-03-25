@@ -37,18 +37,22 @@ sfp int2sfp(int input){
 		res |= 1 << 15;
 		input *= -1;
 	}
-	// set Mantissa
+	// get cnt(how many times input can divided by 2)
 	int M = input;
 	int cnt = 0;
 	while (input > 0) {
 		cnt++;
 		input /= 2;
 	}
+	// set Exponent
+	int exp = (cnt - 1) + BIAS; // cnt - 1 is E(= exp - BIAS)
+	res |= exp << 10;
+	if (cnt > 11) {
+		M >>= (cnt - 11);
+		cnt = 11;
+	}
 	M = M & ~(1 << (--cnt)); // delete (cnt - 1)th bit (assume there is implied 1)
 	res |= M << (10 - cnt);
-	// set Exponent
-	int exp = cnt + BIAS; // cnt is E(= exp - BIAS)
-	res |= exp << 10;
 	return res;
 }
 
