@@ -8,7 +8,7 @@
 #define NEG_INF 	64512
 #define NAN			0xffff
 #define TMAX		0x7fffffff
-#define TMIN		0x80000000
+#define TMIN		-2147483648
 #define BIAS		15
 
 double Pow(double a, int b) {
