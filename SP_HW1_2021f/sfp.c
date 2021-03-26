@@ -66,7 +66,7 @@ int sfp2int(sfp input){
 
 	// get sign, if sign bit is 1, res is negative int
 	int s = 1;
-	if ((input >> 15) & 1 == 1) {
+	if (((input >> 15) & 1) == 1) {
 		s = -1;
 		input = input & ~(1 << 15);
 	}
