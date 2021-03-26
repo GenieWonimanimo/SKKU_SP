@@ -255,13 +255,25 @@ sfp sfp_mul(sfp a, sfp b){
 	sfp m2 = b;
 	m2 <<= 6;
 	m2 >>= 6;
-	if (exp1 != 0) {
+	if (exp1 != 0) { // if a is normalized value
 		E1 = exp1 - BIAS;
-		m1 |= (1 << 10);
+		m1 |= (1 << 10); // there is implied 1
 	}
-	if (exp2 != 0) {
+	else { // denormalized value
+		while (((m1 >> 10) & 1) == 0) { // make m1 1.xxxx
+			m1 <<= 1;
+			E1--;
+		}
+	}
+	if (exp2 != 0) { // if b is normalized value
 		E2 = exp2 - BIAS;
-		m2 |= (1 << 10);
+		m2 |= (1 << 10); // there is implied 1
+	}
+	else { // denormalized value
+		while (((m2 >> 10) & 1) == 0) { // make m2 1.xxxx
+			m2 <<= 1;
+			E2--;
+		}
 	}
 	// multiply Mantissa and add Exponent
 	int res = 0;
@@ -277,11 +289,25 @@ sfp sfp_mul(sfp a, sfp b){
 	// if result exceeds the range of sfp
 	if (resE > 15)
 		return (resS == 0 ? POS_INF : NEG_INF);
-	// get the result
-	resM = resM & ~(1 << 10);
-	int resExp = resE + BIAS;
+	// try to represent a * b as denormalized value
+	while (resE < -14 && resM > 0) {
+		resM >>= 1;
+		resE++;
+	}
+	// too small to represent
+	if (resE < -14)
+		return 0;
+	// a * b is can be represented as denorm or norm
 	res |= resS << 15;
+	// if a * b is denormalized value
+	if (resE == -14 && ((resM >> 10) & 1) == 0) {
+		res |= resM;
+		return res;
+	}
+	// a * b is normalized value
+	resM = resM & ~(1 << 10);
 	res |= resM;
+	int resExp = resE + BIAS;
 	res |= resExp << 10;
 	return res;
 }
