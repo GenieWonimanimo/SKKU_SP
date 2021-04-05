@@ -247,7 +247,7 @@ sfp sfp_add(sfp a, sfp b){
 	if (resE > 15)
 		return (resS == 0 ? POS_INF : NEG_INF);
 	// denoramlized value
-	else if (resE < 1 - BIAS) {
+	else if (resE <= 1 - BIAS) {
 		resM = shift_rte(resM, (1 - BIAS) - resE);
 		res |= resS << 15;
 		res |= resM;
@@ -312,13 +312,25 @@ sfp sfp_mul(sfp a, sfp b){
 	// multiply Mantissa and add Exponent
 	int res = 0;
 	int resS = (s1 == s2) ? 0 : 1;
-	int resM = m1 * m2;
+	unsigned long long resM = (unsigned long long)m1 * m2;
 	int resE = E1 + E2;
 	// normalize
-	resM >>= 10;
-	if (((resM >> 11) & 1) == 1) {
-		resM >>= 1;
+	resM = shift_rte(resM, 10);
+	if (((resM >> 12) & 1) == 1) {
+		resM = shift_rte(resM, 1);
 		resE++;
+		if (((resM >> 12) & 1) == 1) {
+			resM >>= 1;
+			resE++;
+		}
+	}
+	if (((resM >> 11) & 1) == 1) {
+		resM = shift_rte(resM, 1);
+		resE++;
+		if (((resM >> 11) & 1) == 1) {
+			resM >>= 1;
+			resE++;
+		}
 	}
 	// if result exceeds the range of sfp
 	if (resE > 15)
