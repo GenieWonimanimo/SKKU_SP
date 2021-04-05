@@ -213,7 +213,7 @@ sfp sfp_add(sfp a, sfp b){
 		E2 = E1;
 	}
 	sfp res = 0;
-	unsigned long long resS, resM, resE;
+	long long resS, resM, resE;
 	// if a and b has same sign bit
 	if (s1 == s2) {
 		resS = s1;
