@@ -151,6 +151,24 @@ float sfp2float(sfp input){
 	return s * M * Pow(2, E);
 }
 
+// shift n bit to right side.(round to even)
+sfp shift_rte(unsigned long long m, int n) {
+	if (((m >> (n - 1)) & 1) == 1) {
+		if (((m >> n) & 1) == 1) 
+			m += (1 << (n - 1));
+		else {
+			for (int i = 0; i < n - 1; i++) {
+				if (((m >> i) & 1) == 1) {
+					m += (1 << (n - 1));
+					break;
+				}
+			}
+		}
+	}
+	m >>= n;
+	return m;
+}
+
 sfp sfp_add(sfp a, sfp b){
 	// if a or b is special value
 	if (a == NAN || b == NAN)
@@ -169,49 +187,53 @@ sfp sfp_add(sfp a, sfp b){
 	int exp2 = (b & ~(1 << 15)) >> 10;
 	int E1 = 1 - BIAS;
 	int E2 = 1 - BIAS;
-	sfp m1 = a;
-	m1 <<= 6;
-	m1 >>= 6;
-	sfp m2 = b;
-	m2 <<= 6;
-	m2 >>= 6;
+	sfp m1_ = a;
+	m1_ <<= 6;
+	m1_ >>= 6;
+	sfp m2_ = b;
+	m2_ <<= 6;
+	m2_ >>= 6;
 	if (exp1 != 0) {
 		E1 = exp1 - BIAS;
-		m1 |= (1 << 10);
+		m1_ |= (1 << 10);
 	}
 	if (exp2 != 0) {
 		E2 = exp2 - BIAS;
-		m2 |= (1 << 10);
+		m2_ |= (1 << 10);
 	}
+	unsigned long long m1 = (unsigned long long)m1_ << 30;
+	unsigned long long m2 = (unsigned long long)m2_ << 30;
 	// normalize
 	if (E1 < E2) {
-		m1 >>= (E2 - E1);
+		m1 >>= E2 - E1;
 		E1 = E2;
 	}
 	else if (E2 < E1) {
-		m2 >>= (E1 - E2);
+		m2 >>= E1 - E2;
 		E2 = E1;
 	}
-	int res = 0;
-	int resS, resM, resE;
+	sfp res = 0;
+	unsigned long long resS, resM, resE;
 	// if a and b has same sign bit
 	if (s1 == s2) {
 		resS = s1;
-		resM = m1 + m2;
+		resM = shift_rte(m1 + m2, 30);
 		resE = E1;
 		// normalize
 		if (((resM >> 11) & 1) == 1) {
-			resM >>= 1;
+			resM = shift_rte(resM, 1);
 			resE++;
+			if (((resM >> 1) & 1) == 1) {
+				resM >>= 1;
+				resE++;
+			}
 		}
-		// if result exceed bound
-		if (resE > 15)
-			return (resS == 0 ? POS_INF : NEG_INF);
 	}
 	// if a and b has different sign bit
 	else {
 		resS = (m1 > m2) ? 0 : 1;
 		resM = (m1 > m2) ? m1 - m2 : m2 - m1;
+		resM = shift_rte(resM, 30);
 		resE = E1;
 		if (resM == 0)
 			return 0;
@@ -221,11 +243,23 @@ sfp sfp_add(sfp a, sfp b){
 			resE--;
 		}
 	}
-	resM = resM & ~(1 << 10);
-	int resExp = resE + BIAS;
-	res |= resS << 15;
-	res |= resM;
-	res |= resExp << 10;
+	// specialized value
+	if (resE > 15)
+		return (resS == 0 ? POS_INF : NEG_INF);
+	// denoramlized value
+	else if (resE < 1 - BIAS) {
+		resM = shift_rte(resM, (1 - BIAS) - resE);
+		res |= resS << 15;
+		res |= resM;
+	}
+	// normalized value
+	else {
+		resM = resM & ~(1 << 10);
+		int resExp = resE + BIAS;
+		res |= resS << 15;
+		res |= resM;
+		res |= resExp << 10;
+	}
 	return res;
 }
 
