@@ -223,7 +223,7 @@ sfp sfp_add(sfp a, sfp b){
 		if (((resM >> 11) & 1) == 1) {
 			resM = shift_rte(resM, 1);
 			resE++;
-			if (((resM >> 1) & 1) == 1) {
+			if (((resM >> 11) & 1) == 1) {
 				resM >>= 1;
 				resE++;
 			}
