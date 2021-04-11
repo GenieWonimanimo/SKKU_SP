@@ -35,11 +35,15 @@ int main(void) {
 	float f = 10.11;
 
 	printf("*** 10 ***\n");
-	printBit((unsigned*)&((float)u));
-	printBit((unsigned*)&(bit2float(u)));
+	float fu1 = (float)u;
+	float fu2 = bit2float(u);
+	printBit((unsigned*)&fu1);
+	printBit((unsigned*)&fu2);
 
 	printf("*** 10.11 ***\n");
-	printBit(&((unsigned)f));
-	printBit(&(float2bit(f)));
+	unsigned uf1 = (unsigned)f;
+	unsigned uf2 = float2bit(f);
+	printBit(&uf1);
+	printBit(&uf2);
 	return 0;
 }
