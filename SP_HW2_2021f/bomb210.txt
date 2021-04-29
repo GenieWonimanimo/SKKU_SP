@@ -66,3 +66,5 @@ int func4(int di, int si, int dx) {
 ____________________func4종료
 ***+74 -> 0x12와 func4의 반환값을 비교해서 다르면 explode bomb
 +79 -> 0x12(18)와 0x4($rsp)(두 번째 숫자)를 비교해서 같으면 defuse
+
+<phase_5>
