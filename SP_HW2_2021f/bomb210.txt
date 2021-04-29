@@ -1,6 +1,7 @@
 There are rumors on the internets.
 1 2 4 8 16 32
 1 a 231
+11 18
 
 <phase_2>
 +25 -> read_six_numbers, scanf로 6개 숫자를 받음
@@ -24,3 +25,44 @@ There are rumors on the internets.
 +341 -> %al과 0xf(%rsp)(두 번째 입력값)를 비교, %al을 출력해보면 97이 나온다. 이에 맞는  char인 a가 입력이어야 한다.
 
 <phase_4>
++35 -> scanf로 $rsp와 $rsp+0x4에 int 두개를 입력
++40 -> 입력받은 숫자의 수와 2를 비교
+***+43 -> 같지 않다면 explode_bomb
++49 -> 0xe와 $rsp(첫 번째 숫자)를 비교
++56, +61, +66 -> $edx에 0xe, $esi에 0x0, $edi에 $rsp대입
++69 -> func4 호출
+____________________fucn4시작
++1 -> $eax에 $edx(==14) 대입 -> 14
++3 -> $eax에 $esi(==0) 뺄셈 -> 0
++5 -> $ebx에 $eax 대입 -> eax = 14, ebx = 14
++7 -> $ebx를 오른쪽으로 0x1f만큼 shift -> eax = 14, ebx = 0
++10 -> $ebx에 $eax를 더함 -> eax = 14, ebx = 14
++12 -> $ebx를 오른쪽으로 1비트 shift -> eax = 14, ebx = 7
++14 -> $ebx에 $esi를 더함 -> eax = 14, ebx = 7
++16 -> $edi와 $ebx를 비교해서 $edi가 $ebx보다 작으면 +28로 점프
++20 -> $edi가 $ebx를 비교해서 $edi가 $ebx보다 크면 +40으로 점프
++24 -> 둘 다 아니라면 $eax에 $ebx를 대입한 후 return
+코드로 나타내면 아래와 같다.
+int func4(int di, int si, int dx) {
+    int ax = dx;
+    ax -= si;
+    int bx = ax;
+    bx >>= 0x1f;
+    bx += ax;
+    bx >>= 1;
+    bx += si;
+    if (di < bx) {
+        dx = bx - 1;
+        bx += func4(di, si, dx);
+    }
+    else if (di > bx) {
+        si = bx + 1;
+        bx += func4(di, si, dx);
+        bx += ax;
+    }
+    ax = bx;
+    return ax;
+}
+____________________func4종료
+***+74 -> 0x12와 func4의 반환값을 비교해서 다르면 explode bomb
++79 -> 0x12(18)와 0x4($rsp)(두 번째 숫자)를 비교해서 같으면 defuse
