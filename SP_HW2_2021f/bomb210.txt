@@ -1,5 +1,6 @@
 There are rumors on the internets.
 1 2 4 8 16 32
+1 a 231
 
 <phase_2>
 +25 -> read_six_numbers, scanf로 6개 숫자를 받음
@@ -14,3 +15,12 @@ There are rumors on the internets.
 +68 -> je로 같다면 +52로 점프한 후 모든 숫자 읽을 때까지 +52~+68반복
 
 <phase_3>
++42 -> scanf로 한 줄을 받는다.
++47 -> scanf의 반환값인 인자의 개수와 2를 비교
+***+50 -> jle로 2 <= 인자의 개수이면 
++52 -> 7과 scanf로 받은 첫 번째 수를 비교
+***+57 -> 7 > 0x10(%rsp)(첫 번째 입력값)이면 +331으로 점프(첫 번째 수 <= 7이어야 한다.)
++129 -> 0xe7과 0x14(%rsp)(세 번째 입력값)이 같으면 +341로 점프(같지 않으면 explode_bomb)
++341 -> %al과 0xf(%rsp)(두 번째 입력값)를 비교, %al을 출력해보면 97이 나온다. 이에 맞는  char인 a가 입력이어야 한다.
+
+<phase_4>
