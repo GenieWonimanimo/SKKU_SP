@@ -2,6 +2,7 @@ There are rumors on the internets.
 1 2 4 8 16 32
 1 a 231
 11 18
+mfcdhg
 
 <phase_2>
 +25 -> read_six_numbers, scanf로 6개 숫자를 받음
@@ -68,3 +69,39 @@ ____________________func4종료
 +79 -> 0x12(18)와 0x4($rsp)(두 번째 숫자)를 비교해서 같으면 defuse
 
 <phase_5>
++24 -> string_length를 호출, 입력받은 string의 길이를 반환 ($rbx에 string 저장)
+***+29 -> string의 길이와 6을 비교해서 다르면 explode bomb
++46 ~ +69 -> loop 형성. (총 6회 반복, rax가 0~5일동안)
++46 -> rax번째 char을 그 아스키에 맞는 int로 바꿔 $edx에 저장
++50 -> 0xf와 $edx를 and연산하여 나온 하위 4비트를 취하여 $edx에 저장
++53 -> edx에 rcx + rdx + 1을 저장 (rcx는 maduiersnfotvbyl)
++57 -> edx의 하위 4비트를 $rsp + 0x1 + 1 * $rax에 저장($rsp + 0x1부터 한글자씩 저장)
++69 -> loop가 끝난 뒤 $rsp + 0x7에 널을 넣어줘서 문자열 치환 완료
++88 -> strings_not_equal에 $rdi로 바꾼 문자열을, $rsi로 정답 문자열 $rip+0x15cf(bruins)를 넣어줘 비교해서 같다면 defuse
+
+m  a  d  u  i   e  r  s   n  f  o   t    v    b    y    l
+0   1  2  3  4  5  6  7  8  9  10 11  12  13   14  15
+
+bruins를 만들려면 하위 4비트가 13, 6, 3, 4, 8, 7이면 된다.
+다 확인하는건 너무 비효율적이므로
+int get4bit(char a, int target) {
+    return ((int)a & 0xf) == target;
+}
+
+int main(void) {
+    int target;
+    scanf("%d", &target);
+    for (char i = 'a'; i <= 'z'; i++) {
+        if (get4bit(i, target))
+            printf("%c, ", i);
+    }
+    return 0;
+}
+이 코드를 이용해서 쓴다.
+13 -> m
+6 -> f 또는 v
+3 -> c 또는 s
+4 -> d 또는 t
+8 -> h 또는 x
+7 -> g 또는 w
+로 문자열을 구성해주면 된다. ex) mfcdhg
